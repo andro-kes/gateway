@@ -46,7 +46,7 @@ func main() {
 		// r.Post("/revoke", authManager.RevokeHandler) // Removed: handler not defined
 	})
 
-	server := http.Server {
+	server := http.Server{
 		Addr: *httpAddr,
 		Handler: r,
 	}
