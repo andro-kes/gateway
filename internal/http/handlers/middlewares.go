@@ -17,7 +17,7 @@ func PropagateAuthToGRPC(next http.Handler) http.Handler {
 		}
 
 		if auth == "" {
-			http.Error(w, "Access token was expired", http.StatusUnauthorized)
+			http.Error(w, "Missing authentication credentials", http.StatusUnauthorized)
 			return
 		}
 
