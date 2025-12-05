@@ -1,5 +1,7 @@
 github.com/andro-kes/auth_service v0.0.0-20251201105212-e65f33781651 h1:0NXnkKhNPSiAo4XzZ5LKzTrpE6lcIJNf6D7PetM3nZw=
 github.com/andro-kes/auth_service v0.0.0-20251201105212-e65f33781651/go.mod h1:3c48+u1abCfIWFTB+Bf/cSbgzp7XJkmfSTAlsq5v4SM=
+github.com/andro-kes/auth_service v0.0.0-20251205105845-a0297e0166c2 h1:3WzcAoQY8zyCahy9mwyAd7zU6ASWM6qa9M/UrHlJ9ss=
+github.com/andro-kes/auth_service v0.0.0-20251205105845-a0297e0166c2/go.mod h1:3c48+u1abCfIWFTB+Bf/cSbgzp7XJkmfSTAlsq5v4SM=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/go-chi/chi/v5 v5.2.3 h1:WQIt9uxdsAbgIYgid+BpYc+liqQZGMHRaUwp0JUcvdE=

@@ -3,7 +3,7 @@ module github.com/andro-kes/gateway
 go 1.24.2
 
 require (
-	github.com/andro-kes/auth_service v0.0.0-20251201105212-e65f33781651
+	github.com/andro-kes/auth_service v0.0.0-20251205105845-a0297e0166c2
 	github.com/go-chi/chi/v5 v5.2.3
 	go.uber.org/zap v1.27.1
 	google.golang.org/grpc v1.77.0
