@@ -101,7 +101,7 @@ func (am *AuthManager) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := map[string]string{
+	out := map[string]any{
 		"user_id": resp.UserId,
 	}
 
