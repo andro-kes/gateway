@@ -115,7 +115,10 @@ func (am *AuthManager) RefreshHandler(w http.ResponseWriter, r *http.Request) {
 		out["access_expires_in_seconds"] = int64(resp.AccessExpiresIn.AsDuration().Seconds())
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(out)
+	if err := json.NewEncoder(w).Encode(out); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func setRefreshTokenInCookie(w http.ResponseWriter, r *http.Request, resp *pb.TokenResponse) {
