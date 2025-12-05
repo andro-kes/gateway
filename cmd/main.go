@@ -41,7 +41,7 @@ func main() {
 
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/login", authManager.LoginHandler)
-		// r.Post("/register", authManager.RegisterHandler) // Removed: handler not defined
+		r.Post("/register", authManager.RegisterHandler)
 		// r.Post("/refresh", authManager.RefreshHandler) // Removed: handler not defined
 		// r.Post("/revoke", authManager.RevokeHandler) // Removed: handler not defined
 	})

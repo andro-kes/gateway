@@ -24,6 +24,7 @@ func (am *AuthManager) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
+	defer r.Body.Close()
 
 	if req.Username == "" || req.Password == "" {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
@@ -82,4 +83,28 @@ func (am *AuthManager) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(out)
+}
+
+func (am *AuthManager) RegisterHandler(w http.ResponseWriter, r *http.Request) {
+	var req pb.RegisterRequest
+
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "failed to decode request body", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	resp, err := am.Client.Register(r.Context(), &req)
+	if err != nil {
+		http.Error(w, "failed to register user", 400)
+		return
+	}
+
+	out := map[string]string{
+		"user_id": resp.UserId,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(out)
 }
