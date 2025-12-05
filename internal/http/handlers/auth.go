@@ -97,7 +97,7 @@ func (am *AuthManager) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := am.Client.Register(r.Context(), &req)
 	if err != nil {
-		http.Error(w, "failed to register user", 400)
+		http.Error(w, "failed to register user", http.StatusInternalServerError)
 		return
 	}
 
