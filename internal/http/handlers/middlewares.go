@@ -19,7 +19,6 @@ func PropagateAuthToGRPC(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		auth := r.Header.Get("Authorization")
 
-		// fallback to cookie if header not present
 		if auth == "" {
 			c, err := r.Cookie("access_token")
 			if err == nil && c.Value != "" {

@@ -43,7 +43,7 @@ func main() {
 		r.Post("/login", authManager.LoginHandler)
 		r.Post("/register", authManager.RegisterHandler)
 		r.Post("/refresh", authManager.RefreshHandler)
-		// r.Post("/revoke", authManager.RevokeHandler) // Removed: handler not defined
+		r.Post("/revoke", authManager.RevokeHandler)
 	})
 
 	server := http.Server{

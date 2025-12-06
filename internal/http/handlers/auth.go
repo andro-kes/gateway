@@ -161,3 +161,25 @@ func setAccessTokenInCookie(w http.ResponseWriter, r *http.Request, resp *pb.Tok
 	w.Header().Set("Authorization", "Bearer "+resp.AccessToken)
 	w.Header().Set("Access-Control-Expose-Headers", "Authorization")
 }
+
+func (am *AuthManager) RevokeHandler(w http.ResponseWriter, r *http.Request) {
+	var req *pb.RevokeRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Failed to decode request body", http.StatusBadRequest) 
+		return
+	}
+
+	resp, err := am.Client.Revoke(r.Context(), req)
+	if err != nil {
+		http.Error(w, resp.Error, http.StatusInternalServerError)
+		return
+	}
+
+	out := map[string]any{"Message": "Token revoked"}
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(out); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
+}
