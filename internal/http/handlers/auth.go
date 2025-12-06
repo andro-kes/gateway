@@ -172,7 +172,11 @@ func (am *AuthManager) RevokeHandler(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := am.Client.Revoke(r.Context(), req)
 	if err != nil {
-		http.Error(w, resp.Error, http.StatusInternalServerError)
+		errMsg := "Failed to revoke token"
+		if resp != nil && resp.Error != "" {
+			errMsg = resp.Error
+		}
+		http.Error(w, errMsg, http.StatusInternalServerError)
 		return
 	}
 

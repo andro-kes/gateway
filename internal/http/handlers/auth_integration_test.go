@@ -541,3 +541,217 @@ func TestProtectedRoute_WithTokenInCookie(t *testing.T) {
 	// Assert response
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
+
+// TestLoginHandler_InvalidJSON tests login with malformed JSON
+func TestLoginHandler_InvalidJSON(t *testing.T) {
+	mockClient := &mockAuthServiceClient{}
+	router := setupTestRouter(mockClient)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	// Send invalid JSON
+	resp, err := http.Post(ts.URL+"/auth/login", "application/json", bytes.NewBuffer([]byte("invalid json")))
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+}
+
+// TestRegisterHandler_InvalidJSON tests register with malformed JSON
+func TestRegisterHandler_InvalidJSON(t *testing.T) {
+	mockClient := &mockAuthServiceClient{}
+	router := setupTestRouter(mockClient)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	// Send invalid JSON
+	resp, err := http.Post(ts.URL+"/auth/register", "application/json", bytes.NewBuffer([]byte("invalid json")))
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+}
+
+// TestRegisterHandler_Failure tests register when the gRPC call fails
+func TestRegisterHandler_Failure(t *testing.T) {
+	mockClient := &mockAuthServiceClient{
+		registerFunc: func(ctx context.Context, in *pb.RegisterRequest, opts ...grpc.CallOption) (*pb.RegisterResponse, error) {
+			return nil, fmt.Errorf("user already exists")
+		},
+	}
+
+	router := setupTestRouter(mockClient)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	reqBody := map[string]string{
+		"username": "existinguser",
+		"password": "testpass",
+	}
+	reqJSON, err := json.Marshal(reqBody)
+	require.NoError(t, err)
+
+	resp, err := http.Post(ts.URL+"/auth/register", "application/json", bytes.NewBuffer(reqJSON))
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+}
+
+// TestRefreshHandler_InvalidJSON tests refresh with malformed JSON
+func TestRefreshHandler_InvalidJSON(t *testing.T) {
+	mockClient := &mockAuthServiceClient{}
+	router := setupTestRouter(mockClient)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	// Send invalid JSON
+	resp, err := http.Post(ts.URL+"/auth/refresh", "application/json", bytes.NewBuffer([]byte("invalid json")))
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+}
+
+// TestRefreshHandler_Failure tests refresh when the gRPC call fails
+func TestRefreshHandler_Failure(t *testing.T) {
+	mockClient := &mockAuthServiceClient{
+		refreshFunc: func(ctx context.Context, in *pb.RefreshRequest, opts ...grpc.CallOption) (*pb.TokenResponse, error) {
+			return nil, fmt.Errorf("invalid refresh token")
+		},
+	}
+
+	router := setupTestRouter(mockClient)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	reqBody := map[string]string{
+		"refresh_token": "invalid-token",
+	}
+	reqJSON, err := json.Marshal(reqBody)
+	require.NoError(t, err)
+
+	resp, err := http.Post(ts.URL+"/auth/refresh", "application/json", bytes.NewBuffer(reqJSON))
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+}
+
+// TestRevokeHandler_InvalidJSON tests revoke with malformed JSON
+func TestRevokeHandler_InvalidJSON(t *testing.T) {
+	mockClient := &mockAuthServiceClient{}
+	router := setupTestRouter(mockClient)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	// Send invalid JSON
+	resp, err := http.Post(ts.URL+"/auth/revoke", "application/json", bytes.NewBuffer([]byte("invalid json")))
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+}
+
+// TestRevokeHandler_Failure tests revoke when the gRPC call fails
+func TestRevokeHandler_Failure(t *testing.T) {
+	mockClient := &mockAuthServiceClient{
+		revokeFunc: func(ctx context.Context, in *pb.RevokeRequest, opts ...grpc.CallOption) (*pb.RevokeResponse, error) {
+			return nil, fmt.Errorf("token not found")
+		},
+	}
+
+	router := setupTestRouter(mockClient)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	reqBody := map[string]string{
+		"refresh_token": "unknown-token",
+		"user_id":       "user-123",
+	}
+	reqJSON, err := json.Marshal(reqBody)
+	require.NoError(t, err)
+
+	resp, err := http.Post(ts.URL+"/auth/revoke", "application/json", bytes.NewBuffer(reqJSON))
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+}
+
+// TestLoginHandler_TokensWithoutExpiry tests login response when tokens don't have expiry set
+func TestLoginHandler_TokensWithoutExpiry(t *testing.T) {
+	mockClient := &mockAuthServiceClient{
+		loginFunc: func(ctx context.Context, in *pb.LoginRequest, opts ...grpc.CallOption) (*pb.TokenResponse, error) {
+			return &pb.TokenResponse{
+				UserId:       "user-123",
+				AccessToken:  generateMockJWT(time.Now().Add(5 * time.Minute)),
+				RefreshToken: "refresh-token-xyz",
+				// Note: Not setting AccessExpiresIn or RefreshExpiresIn
+			}, nil
+		},
+	}
+
+	router := setupTestRouter(mockClient)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	reqBody := map[string]string{
+		"username": "testuser",
+		"password": "testpass",
+	}
+	reqJSON, err := json.Marshal(reqBody)
+	require.NoError(t, err)
+
+	resp, err := http.Post(ts.URL+"/auth/login", "application/json", bytes.NewBuffer(reqJSON))
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Check response body - should not have access_expires_in_seconds
+	var respBody map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&respBody)
+	require.NoError(t, err)
+	assert.Equal(t, "user-123", respBody["user_id"])
+	_, hasExpiry := respBody["access_expires_in_seconds"]
+	assert.False(t, hasExpiry, "Should not have access_expires_in_seconds when not set")
+}
+
+// TestRefreshHandler_TokensWithoutExpiry tests refresh response when tokens don't have expiry set
+func TestRefreshHandler_TokensWithoutExpiry(t *testing.T) {
+	mockClient := &mockAuthServiceClient{
+		refreshFunc: func(ctx context.Context, in *pb.RefreshRequest, opts ...grpc.CallOption) (*pb.TokenResponse, error) {
+			return &pb.TokenResponse{
+				UserId:       "user-123",
+				AccessToken:  generateMockJWT(time.Now().Add(5 * time.Minute)),
+				RefreshToken: "new-refresh-token",
+				// Note: Not setting AccessExpiresIn or RefreshExpiresIn
+			}, nil
+		},
+	}
+
+	router := setupTestRouter(mockClient)
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	reqBody := map[string]string{
+		"refresh_token": "old-refresh-token",
+	}
+	reqJSON, err := json.Marshal(reqBody)
+	require.NoError(t, err)
+
+	resp, err := http.Post(ts.URL+"/auth/refresh", "application/json", bytes.NewBuffer(reqJSON))
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Check response body - should not have access_expires_in_seconds
+	var respBody map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&respBody)
+	require.NoError(t, err)
+	assert.Equal(t, "user-123", respBody["user_id"])
+	_, hasExpiry := respBody["access_expires_in_seconds"]
+	assert.False(t, hasExpiry, "Should not have access_expires_in_seconds when not set")
+}
