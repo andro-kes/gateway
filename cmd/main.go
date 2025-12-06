@@ -47,7 +47,7 @@ func main() {
 	})
 
 	server := http.Server{
-		Addr: *httpAddr,
+		Addr:    *httpAddr,
 		Handler: r,
 	}
 
@@ -62,10 +62,10 @@ func main() {
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 
 	select {
-	case err := <- svrError:
+	case err := <-svrError:
 		zl.Warn("Failed to start HTTP server", zap.Error(err))
 		panic(err.Error())
-	case <- shutdown:
+	case <-shutdown:
 		zl.Info("System shutdown")
 		break
 	}
@@ -73,6 +73,6 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
-        panic(err.Error())
+		panic(err.Error())
 	}
 }
