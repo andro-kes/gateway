@@ -3,6 +3,7 @@ package handlers_test
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -93,41 +94,12 @@ func generateMockJWT(expiry time.Time) string {
 		"sub": "test-user-123",
 	}
 	payloadJSON, _ := json.Marshal(payload)
-	// Use base64 URL encoding without padding
-	payloadB64 := base64URLEncode(payloadJSON)
+	// Use base64 URL encoding without padding (RawURLEncoding)
+	payloadB64 := base64.RawURLEncoding.EncodeToString(payloadJSON)
 	
 	signature := "test-signature"
 	
 	return fmt.Sprintf("%s.%s.%s", header, payloadB64, signature)
-}
-
-func base64URLEncode(data []byte) string {
-	// Implement base64 URL encoding without padding
-	const encodeURL = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
-	var result []byte
-	
-	for i := 0; i < len(data); i += 3 {
-		var b1, b2, b3 byte
-		b1 = data[i]
-		if i+1 < len(data) {
-			b2 = data[i+1]
-		}
-		if i+2 < len(data) {
-			b3 = data[i+2]
-		}
-		
-		result = append(result, encodeURL[(b1>>2)&0x3F])
-		result = append(result, encodeURL[((b1<<4)|(b2>>4))&0x3F])
-		
-		if i+1 < len(data) {
-			result = append(result, encodeURL[((b2<<2)|(b3>>6))&0x3F])
-		}
-		if i+2 < len(data) {
-			result = append(result, encodeURL[b3&0x3F])
-		}
-	}
-	
-	return string(result)
 }
 
 // TestLoginHandler_Success tests successful authentication
