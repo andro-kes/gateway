@@ -166,7 +166,7 @@ func (am *AuthManager) RevokeHandler(w http.ResponseWriter, r *http.Request) {
 	var req *pb.RevokeRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Failed to decode request body", http.StatusBadRequest) 
+		http.Error(w, "Failed to decode request body", http.StatusBadRequest)
 		return
 	}
 

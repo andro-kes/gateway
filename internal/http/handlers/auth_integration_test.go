@@ -88,17 +88,17 @@ func generateMockJWT(expiry time.Time) string {
 	// JWT structure: header.payload.signature
 	// We only need a valid payload with exp claim for the middleware to parse
 	header := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" // {"alg":"HS256","typ":"JWT"}
-	
-	payload := map[string]interface{}{
+
+	payload := map[string]any{
 		"exp": expiry.Unix(),
 		"sub": "test-user-123",
 	}
 	payloadJSON, _ := json.Marshal(payload)
 	// Use base64 URL encoding without padding (RawURLEncoding)
 	payloadB64 := base64.RawURLEncoding.EncodeToString(payloadJSON)
-	
+
 	signature := "test-signature"
-	
+
 	return fmt.Sprintf("%s.%s.%s", header, payloadB64, signature)
 }
 
@@ -108,7 +108,7 @@ func TestLoginHandler_Success(t *testing.T) {
 		loginFunc: func(ctx context.Context, in *pb.LoginRequest, opts ...grpc.CallOption) (*pb.TokenResponse, error) {
 			assert.Equal(t, "testuser", in.Username)
 			assert.Equal(t, "testpass", in.Password)
-			
+
 			return &pb.TokenResponse{
 				UserId:           "user-123",
 				AccessToken:      generateMockJWT(time.Now().Add(5 * time.Minute)),
@@ -141,7 +141,7 @@ func TestLoginHandler_Success(t *testing.T) {
 	assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
 
 	// Check response body
-	var respBody map[string]interface{}
+	var respBody map[string]any
 	err = json.NewDecoder(resp.Body).Decode(&respBody)
 	require.NoError(t, err)
 	assert.Equal(t, "user-123", respBody["user_id"])
@@ -197,7 +197,7 @@ func TestLoginHandler_InvalidCredentials(t *testing.T) {
 
 	// Assert response
 	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
-	
+
 	body, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 	assert.Contains(t, string(body), "invalid credentials")
@@ -252,7 +252,7 @@ func TestRegisterHandler_Success(t *testing.T) {
 		registerFunc: func(ctx context.Context, in *pb.RegisterRequest, opts ...grpc.CallOption) (*pb.RegisterResponse, error) {
 			assert.Equal(t, "newuser", in.Username)
 			assert.Equal(t, "newpass", in.Password)
-			
+
 			return &pb.RegisterResponse{
 				UserId: "user-456",
 			}, nil
@@ -293,7 +293,7 @@ func TestRefreshHandler_Success(t *testing.T) {
 	mockClient := &mockAuthServiceClient{
 		refreshFunc: func(ctx context.Context, in *pb.RefreshRequest, opts ...grpc.CallOption) (*pb.TokenResponse, error) {
 			assert.Equal(t, "refresh-token-xyz", in.RefreshToken)
-			
+
 			return &pb.TokenResponse{
 				UserId:           "user-123",
 				AccessToken:      generateMockJWT(time.Now().Add(5 * time.Minute)),
@@ -352,7 +352,7 @@ func TestRevokeHandler_Success(t *testing.T) {
 		revokeFunc: func(ctx context.Context, in *pb.RevokeRequest, opts ...grpc.CallOption) (*pb.RevokeResponse, error) {
 			assert.Equal(t, "refresh-token-to-revoke", in.RefreshToken)
 			assert.Equal(t, "user-123", in.UserId)
-			
+
 			return &pb.RevokeResponse{}, nil
 		},
 	}
@@ -407,7 +407,7 @@ func TestProtectedRoute_WithValidToken(t *testing.T) {
 
 	// Assert response
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	
+
 	var respBody map[string]string
 	err = json.NewDecoder(resp.Body).Decode(&respBody)
 	require.NoError(t, err)
@@ -436,7 +436,7 @@ func TestProtectedRoute_WithExpiredToken(t *testing.T) {
 
 	// Assert response
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
-	
+
 	body, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 	assert.Contains(t, string(body), "access token expired")
@@ -456,7 +456,7 @@ func TestProtectedRoute_WithMissingToken(t *testing.T) {
 
 	// Assert response
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
-	
+
 	body, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 	assert.Contains(t, string(body), "missing access token")
@@ -481,7 +481,7 @@ func TestProtectedRoute_WithInvalidToken(t *testing.T) {
 
 	// Assert response
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
-	
+
 	body, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 	assert.Contains(t, string(body), "invalid access token")
