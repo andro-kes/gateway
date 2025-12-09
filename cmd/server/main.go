@@ -44,6 +44,7 @@ func main() {
 		r.Post("/register", authManager.RegisterHandler)
 		r.Post("/refresh", authManager.RefreshHandler)
 		r.Post("/revoke", authManager.RevokeHandler)
+		r.Get("/health", handlers.CheckHealth)
 	})
 
 	server := http.Server{
