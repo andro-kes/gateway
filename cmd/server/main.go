@@ -54,7 +54,7 @@ func main() {
 	r.Route("/inventory", func(r chi.Router) {
 		r.Post("/create", invManager.CreateHandler)
 		r.Post("/delete", invManager.DeleteHandler)
-		r.Post("/get", invManager.GetHandler)
+		r.Get("/get", invManager.GetHandler)
 		r.Post("/list", invManager.ListHandler)
 		r.Post("/update", invManager.UpdateHandler)
 	})
