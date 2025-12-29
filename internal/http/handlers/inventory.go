@@ -64,7 +64,7 @@ func (im *InvManager) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 	p, err := im.client.UpdateProduct(r.Context(), &req)
 	if err != nil {
-		http.Error(w, "failed to update product", http.StatusBadRequest)
+		http.Error(w, "failed to update product", http.StatusInternalServerError)
 		return
 	}
 
