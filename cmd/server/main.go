@@ -9,9 +9,10 @@ import (
 	"syscall"
 	"time"
 
-	pb "github.com/andro-kes/auth_service/proto"
+	pbAuth "github.com/andro-kes/auth_service/proto"
 	"github.com/andro-kes/gateway/internal/http/handlers"
 	"github.com/andro-kes/gateway/internal/logger"
+	pbInv "github.com/andro-kes/inventory_service/proto"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -34,8 +35,11 @@ func main() {
 	}
 	defer conn.Close()
 
-	authClient := pb.NewAuthServiceClient(conn)
+	authClient := pbAuth.NewAuthServiceClient(conn)
 	authManager := handlers.NewAuthManager(authClient)
+
+	invClient := pbInv.NewInventoryServiceClient(conn)
+	invManager := handlers.NewInvManager(invClient)
 
 	r := chi.NewRouter()
 
@@ -45,6 +49,14 @@ func main() {
 		r.Post("/refresh", authManager.RefreshHandler)
 		r.Post("/revoke", authManager.RevokeHandler)
 		r.Get("/health", handlers.CheckHealth)
+	})
+
+	r.Route("/inventory", func(r chi.Router) {
+		r.Post("/create", invManager.CreateHandler)
+		r.Post("/delete", invManager.DeleteHandler)
+		r.Post("/get", invManager.GetHandler)
+		r.Post("/list", invManager.ListHandler)
+		r.Post("/update", invManager.UpdateHandler)
 	})
 
 	server := http.Server{
