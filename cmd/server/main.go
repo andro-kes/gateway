@@ -52,6 +52,8 @@ func main() {
 	})
 
 	r.Route("/inventory", func(r chi.Router) {
+		r.Use(handlers.PropagateAuthToGRPC)
+		// Protected routes
 		r.Post("/create", invManager.CreateHandler)
 		r.Post("/delete", invManager.DeleteHandler)
 		r.Get("/get", invManager.GetHandler)
