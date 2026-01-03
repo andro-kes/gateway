@@ -43,12 +43,13 @@ func main() {
 
 	r := chi.NewRouter()
 
+	r.Get("/health", handlers.CheckHealth)
+
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/login", authManager.LoginHandler)
 		r.Post("/register", authManager.RegisterHandler)
 		r.Post("/refresh", authManager.RefreshHandler)
 		r.Post("/revoke", authManager.RevokeHandler)
-		r.Get("/health", handlers.CheckHealth)
 	})
 
 	r.Route("/inventory", func(r chi.Router) {
